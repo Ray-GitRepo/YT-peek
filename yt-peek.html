@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YouTube Widget</title>
+<style>
+  body { font-family: Arial; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0b1220; color: #fff; }
+  #widget { background: #1f2937; padding: 15px 20px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 220px; }
+  #profile { border-radius: 50%; width: 80px; height: 80px; }
+  #channelName { font-weight: bold; font-size: 16px; }
+  #subs { font-size: 24px; margin-top: 5px; }
+  #delta { font-size: 14px; color: #a8ff9a; margin-top: 2px; }
+  #status { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div id="widget">
+  <img id="profile" src="" alt="Profile">
+  <div id="channelName">Loading...</div>
+  <div id="subs">0</div>
+  <div id="delta"></div>
+  <div id="status">Loading...</div>
+</div>
+
+<script>
+const CHANNEL_ID = "UCcy9OPHF-DJBlRdEJErUVEg"; // your channel ID(change it if you want) can some make a system where you enter the channel you want to find i can't fo it
+const API_KEY = "AIzaSyD8yBm5MIRF6g-Ubu3J6KjPjz-YC5qG4Zw"; // this is the API key don't change if you don't know what you are doing
+let lastSubs = parseInt(localStorage.getItem('lastSubs')) || 0;
+
+async function fetchSubs() {
+  try {
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${CHANNEL_ID}&key=${API_KEY}`);
+    const data = await res.json();
+    const channel = data.items[0];
+
+    const subs = parseInt(channel.statistics.subscriberCount);
+    const channelName = channel.snippet.title;
+    const profilePic = channel.snippet.thumbnails.high.url;
+
+    // Update Contents
+    document.getElementById('subs').textContent = subs.toLocaleString();
+    document.getElementById('channelName').textContent = channelName;
+    document.getElementById('profile').src = profilePic;
+
+    // Delta
+    const delta = subs - lastSubs;
+    const deltaEl = document.getElementById('delta');
+    if (delta !== 0) {
+      deltaEl.textContent = (delta > 0 ? "+" : "") + delta.toLocaleString();
+      setTimeout(() => deltaEl.textContent = '', 5000);
+    }
+
+    lastSubs = subs;
+    localStorage.setItem('lastSubs', subs);
+    document.getElementById('status').textContent = "Online";
+
+  } catch (e) {
+    document.getElementById('status').textContent = "Offline: last count";
+    document.getElementById('subs').textContent = lastSubs.toLocaleString();
+    console.error(e);
+  }
+}
+
+// initial fetch To start loading 
+fetchSubs();
+// update subscribers count every 20 seconds
+setInterval(fetchSubs, 20000);
+</script>
+</body>
+</html>
